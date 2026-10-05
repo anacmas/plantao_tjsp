@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Plantão TJSP</title>
+<style>
+:root {
+  --bg: #f0f2f5;
+  --card: #ffffff;
+  --border: #dde1e7;
+  --text: #1a1d23;
+  --muted: #6b7280;
+  --accent: #1d4ed8;
+  --section-bg: #1e293b;
+  --section-fg: #f8fafc;
+  --done-bg: #d1fae5;
+  --done-fg: #065f46;
+  --warn: #b45309;
+  --warn-bg: #fef3c7;
+
+  --apf: #1d4ed8;   --apf-bg: #eff6ff;
+  --cap: #7c3aed;   --cap-bg: #f5f3ff;
+  --mpu: #0f766e;   --mpu-bg: #f0fdfa;
+
+  --tab-inactive: #94a3b8;
+  --step-done: #10b981;
+
+  --result-prev: #dc2626; --result-prev-bg: #fef2f2;
+  --result-dom:  #d97706; --result-dom-bg:  #fffbeb;
+  --result-prov: #059669; --result-prov-bg: #ecfdf5;
+  --result-relax:#2563eb; --result-relax-bg:#eff6ff;
+
+  --precat: #fce4c8;
+  --allok:  #d7f5df; --allok-header: #bdebc9;
+  --before-bg: #e3eefa; --after-bg: #e6f4ea;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system,'Segoe UI',Roboto,sans-serif; background: var(--bg); color: var(--text); font-size: 13px; min-height: 100vh; }
+
+/* TOP BAR */
+.topbar { background: var(--section-bg); color: var(--section-fg); padding: 8px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 6px rgba(0,0,0,.25); overflow: visible; }
+.topbar-left { display: flex; flex-direction: column; gap: 1px; }
+.topbar h1 { font-size: 13px; font-weight: 600; letter-spacing: .02em; }
+.topbar-notice { position: absolute; left: 50%; transform: translateX(-50%); font-size: 12px; color: #fbbf24; font-style: italic; opacity: .95; white-space: nowrap; pointer-events: none; }
+.topbar-actions { display: flex; gap: 8px; align-items: center; }
+.btn { border: none; border-radius: 5px; padding: 4px 12px; font-size: 12px; font-weight: 600; cursor: pointer; transition: opacity .15s; }
+.btn:hover { opacity: .85; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-ghost { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.2); }
+/* EMAIL POPUP */
+.email-popup { display: none; position: fixed; top: 44px; right: 16px; z-index: 999; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,.18); width: 340px; max-height: 80vh; overflow-y: auto; padding: 14px 16px; font-size: 12px; color: #1e293b; }
+.email-popup.open { display: block; }
+.email-popup-close { position: absolute; top: 8px; right: 10px; background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b; line-height: 1; }
+.email-popup h3 { font-size: 13px; font-weight: 700; margin: 0 0 10px 0; color: #1e40af; }
+.email-section { margin-bottom: 12px; }
+.email-section-title { font-weight: 700; font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 4px; letter-spacing: .04em; }
+.email-row { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; padding: 3px 0; border-bottom: 1px solid #f1f5f9; }
+.email-row:last-child { border-bottom: none; }
+.email-label { color: #374151; flex: 1; }
+.email-addr { color: #2563eb; font-size: 11px; cursor: pointer; white-space: nowrap; }
+.email-addr:hover { text-decoration: underline; }
+.btn-danger { background: #fff; color: #dc2626; border: 1px solid #fca5a5; font-size: 11px; padding: 2px 8px; }
+.btn-muted  { background: #f1f5f9; color: #475569; font-size: 11px; }
+
+/* TABS */
+.tabs-wrap { background: var(--section-bg); padding: 0 16px; display: flex; gap: 2px; overflow-x: auto; border-bottom: 2px solid #334155; position: sticky; top: 37px; z-index: 99; }
+.tabs-wrap::-webkit-scrollbar { height: 3px; }
+.tabs-wrap::-webkit-scrollbar-thumb { background: #475569; border-radius: 2px; }
+.tab { padding: 7px 14px 6px; font-size: 12px; font-weight: 600; color: var(--tab-inactive); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; display: flex; align-items: center; gap: 6px; transition: color .15s, border-color .15s; user-select: none; }
+.tab:hover { color: #cbd5e1; }
+.tab.active { color: #f8fafc; border-bottom-color: #3b82f6; }
+.tab .tab-badge { font-size: 9px; padding: 1px 5px; border-radius: 10px; font-weight: 700; }
+.badge-apf  { background: var(--apf); color:#fff; }
+.badge-cap  { background: var(--cap); color:#fff; }
+.badge-pet  { background: #7c3aed;   color:#fff; }
+.badge-mpu  { background: var(--mpu); color:#fff; }
+.badge-new  { background: #64748b;   color:#fff; }
+.tab .tab-dot { width: 7px; height: 7px; border-radius: 50%; }
+.tab-close { margin-left: 4px; background: none; border: none; color: #94a3b8; font-size: 13px; line-height: 1; cursor: pointer; padding: 0 2px; border-radius: 3px; transition: color .15s, background .15s; }
+.tab-close:hover { color: #f87171; background: rgba(255,255,255,.1); }
+.dot-done     { background: var(--step-done); }
+.dot-progress { background: #f59e0b; }
+.dot-new      { background: #64748b; }
+
+/* CONTENT */
+.content { padding: 16px; max-width: 760px; margin: 0 auto; }
+
+/* CASE TYPE PICKER (first screen) */
+.case-picker { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 16px; }
+.case-picker h2 { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
+.case-options { display: flex; gap: 10px; }
+.case-btn { flex: 1; padding: 14px 10px; border-radius: 8px; border: 2px solid var(--border); background: #f8fafc; cursor: pointer; text-align: center; transition: all .15s; font-size: 13px; font-weight: 700; }
+.case-btn:hover { border-color: #93c5fd; background: #eff6ff; }
+.case-btn .case-sub { display: block; font-size: 11px; font-weight: 400; color: var(--muted); margin-top: 4px; }
+.case-btn.sel-aud { border-color: var(--apf); background: var(--apf-bg); color: var(--apf); }
+.case-btn.sel-mpu { border-color: var(--mpu); background: var(--mpu-bg); color: var(--mpu); }
+
+/* PROC INFO */
+.proc-info { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
+.proc-info label { font-size: 10px; color: var(--muted); display: block; margin-bottom: 3px; font-weight: 600; text-transform: uppercase; }
+.proc-info input[type=text] { border: 1px solid var(--border); border-radius: 4px; padding: 4px 7px; font-size: 12px; background: #fafafa; width: 100%; }
+.proc-info input[type=text]:focus { outline: 2px solid #93c5fd; border-color: #93c5fd; }
+.info-field { flex: 1; min-width: 130px; }
+
+/* CHECKLIST SECTIONS (custody style) */
+.cl-section { background: var(--card); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+.cl-section-header { background: var(--section-bg); color: var(--section-fg); padding: 7px 12px; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.cl-section-header.h-apf     { background: #1e3a5f; }
+.cl-section-header.h-cap     { background: #3b1f6e; }
+.cl-section-header.h-mpu     { background: #134e4a; }
+.cl-section-header.h-common  { background: #1e293b; }
+.cl-section-header.h-before  { background: #1e3a5f; }
+.cl-section-header.h-after   { background: #14532d; }
+.cl-section-header.h-prev    { background: #7f1d1d; }
+.cl-section-header.h-dom     { background: #78350f; }
+.cl-section-header.h-prov    { background: #064e3b; }
+.cl-section-header.h-relax   { background: #1e3a8a; }
+
+.cl-item { display: flex; align-items: flex-start; gap: 10px; padding: 7px 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; transition: background .1s; }
+.cl-item:last-child { border-bottom: none; }
+.cl-item:hover { background: #f8fafc; }
+.cl-item.checked { background: #f0fdf4; }
+.cl-item.checked .cl-label { text-decoration: line-through; color: #9ca3af; }
+.cl-item.disabled { background: #f1f5f9 !important; cursor: default; }
+.cl-item.disabled .cl-label { color: #9ca3af; }
+.cl-item.precat-hi { background: #fce4c8; }
+.cl-item.precat-hi.checked { background: #f5d5a8; }
+
+.cl-check { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; border: 2px solid #d1d5db; border-radius: 4px; background: #fff; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+.cl-item.checked .cl-check { background: var(--step-done); border-color: var(--step-done); }
+.cl-item.disabled .cl-check { background: #e2e8f0; border-color: #cbd5e1; opacity: .5; }
+.cl-check svg { display: none; }
+.cl-item.checked .cl-check svg { display: block; }
+.cl-label { font-size: 12px; line-height: 1.5; flex: 1; }
+
+.cl-note-row { font-size: 11px; color: var(--warn); background: var(--warn-bg); padding: 5px 12px; font-style: italic; border-bottom: 1px solid #f1f5f9; }
+.cl-note-row.cl-note-legal { color: #374151; background: #f8fafc; font-style: normal; font-size: 11px; white-space: pre-line; line-height: 1.6; border-left: 3px solid #94a3b8; padding: 8px 12px; }
+
+/* mini text field inside cl-item */
+.mini-txt { width: 58px; font-size: 10px; padding: 1px 4px; border: 1px solid var(--border); border-radius: 3px; text-transform: uppercase; margin-left: 4px; }
+
+/* SELECT inside cl-item */
+.cl-select { font-size: 11px; padding: 2px 4px; border: 1px solid var(--border); border-radius: 4px; background: #fff; margin-left: 4px; }
+
+/* tudo ok row */
+.tudook-row { background: var(--allok); }
+.tudook-row.checked-ok { background: #a7f3d0; }
+
+/* PICKER CARDS */
+.sub-picker { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 12px; }
+.sub-picker h3 { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 10px; }
+.sub-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sub-options.cols-1 { grid-template-columns: 1fr 1fr; }
+.sub-btn { padding: 9px 10px; border-radius: 7px; border: 2px solid var(--border); background: #f8fafc; cursor: pointer; text-align: center; font-size: 11px; font-weight: 700; transition: all .15s; }
+.sub-btn:hover { border-color: #93c5fd; background: #eff6ff; }
+.sub-btn.sel-prev  { border-color: var(--result-prev); background: var(--result-prev-bg); color: var(--result-prev); }
+.sub-btn.sel-dom   { border-color: var(--result-dom);  background: var(--result-dom-bg);  color: var(--result-dom);  }
+.sub-btn.sel-prov  { border-color: var(--result-prov); background: var(--result-prov-bg); color: var(--result-prov); }
+.sub-btn.sel-relax { border-color: var(--result-relax);background: var(--result-relax-bg);color: var(--result-relax);}
+.sub-btn.sel-fechado { border-color: var(--cap); background: var(--cap-bg); color: var(--cap); }
+.sub-btn.sel-aberto  { border-color: var(--mpu); background: var(--mpu-bg); color: var(--mpu); }
+
+/* PROGRESS */
+.progress-bar-wrap { margin-bottom: 14px; }
+.progress-bar-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; display: flex; justify-content: space-between; }
+.progress-bar-track { height: 5px; background: #e2e8f0; border-radius: 3px; overflow: hidden; }
+.progress-bar-fill  { height: 100%; background: var(--step-done); border-radius: 3px; transition: width .3s; }
+
+/* FINISH */
+.finish-badge { background: var(--done-bg); color: var(--done-fg); border: 1px solid #6ee7b7; border-radius: 8px; padding: 10px 14px; font-weight: 700; font-size: 12px; text-align: center; margin-bottom: 12px; }
+
+/* EMPTY */
+.empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+.empty-state p { font-size: 13px; margin-top: 8px; }
+
+/* MPU TABLE WRAPPER */
+.mpu-wrap { overflow-x: auto; margin-bottom: 12px; }
+table { border-collapse: collapse; width: 100%; min-width: 860px; background: var(--card); }
+th, td { border: 1px solid var(--border); padding: 0; vertical-align: top; line-height: 1.15; }
+.lbl-col { position: sticky; left: 0; background: #fafbfc; z-index: 2; min-width: 360px; max-width: 360px; font-size: 12px; padding: 3px 8px !important; }
+.mpu-section-row td { background: var(--section-bg); color: #fff; font-weight: 600; font-size: 11px; }
+.mpu-section-row .lbl-col { background: var(--section-bg); color: #fff; }
+.proc-col-mpu { min-width: 120px; }
+.proc-header-mpu { padding: 3px 5px; background: #eef1f5; }
+.proc-header-mpu input[type=text] { width: 100%; border: 1px solid var(--border); border-radius: 3px; padding: 2px 4px; font-size: 14px; margin-bottom: 2px; }
+.precat-lbl { display: flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; color: #b45309; cursor: pointer; }
+td.mpu-item-cell { text-align: center; padding: 2px; cursor: pointer; }
+td.mpu-item-cell input[type=checkbox] { width: 14px; height: 14px; cursor: pointer; }
+.item-with-text { display: inline-flex; align-items: center; gap: 4px; }
+.mini-txt-mpu { width: 56px; font-size: 10px; padding: 1px 3px; border: 1px solid var(--border); border-radius: 3px; text-transform: uppercase; }
+td.mpu-select-cell { text-align: center; padding: 2px; }
+td.mpu-select-cell select { font-size: 10px; padding: 1px 3px; border: 1px solid var(--border); border-radius: 3px; background: #fff; }
+.mpu-note-row td { background: #fbfaf6; font-size: 10px; color: #6b5b1f; font-style: italic; }
+.mpu-note-row .lbl-col { background: #fbfaf6; color: #6b5b1f; }
+tr.phase-before > td.proc-col-mpu { background: #e3eefa; }
+tr.phase-before > td.lbl-col { background: #e3eefa; }
+tr.phase-after > td.proc-col-mpu { background: #e6f4ea; }
+tr.phase-after > td.lbl-col { background: #e6f4ea; }
+.mpu-precat-on { background: #fce4c8 !important; }
+.mpu-allok-on { background: #d7f5df !important; }
+.mpu-allok-on.proc-header-mpu { background: #bdebc9 !important; }
+td.mpu-item-disabled { background: #dadce0 !important; }
+td.mpu-item-disabled input { cursor: not-allowed; opacity: .5; }
+.col-remove-mpu { float: right; background: none; border: none; color: #94a3b8; font-size: 11px; padding: 0; cursor: pointer; }
+.col-remove-mpu:hover { color: #c0392b; }
+.mpu-toolbar { display: flex; gap: 8px; margin-bottom: 10px; }
+.mpu-obs-row textarea { width: 100%; min-height: 34px; border: 1px solid var(--border); border-radius: 4px; padding: 3px; font-size: 11px; resize: vertical; font-family: inherit; }
+.mpu-tudook-row td.mpu-item-cell { padding: 2px; }
+@media print {
+  .topbar, .tabs-bar, .mpu-toolbar, .col-remove-mpu, #emailsBtn, #ddmsBtn { display: none !important; }
+  body { background: #fff !important; }
+  #mpu-content { padding: 0 !important; }
+  .mpu-table { width: 100% !important; font-size: 12px; }
+  .mpu-table th, .mpu-table td { border: 1px solid #999 !important; }
+  td.mpu-item-ok { background: #d4edda !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  td.mpu-item-precatoria { background: #ffe5b4 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  td.mpu-item-disabled { background: #dadce0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>Plantão TJSP</h1>
+  </div>
+  <span class="topbar-notice">⚠️ Essa planilha é auxiliar do manual, sempre consulte o manual</span>
+  <div class="topbar-actions">
+    <button class="btn btn-ghost" id="emailsBtn">📧 E-mails comunicações comuns</button>
+    <button class="btn btn-ghost" id="ddmsBtn">📋 E-mails DDMs</button>
+    <button class="btn btn-ghost" id="addCasoBtn">+ Novo auto</button>
+  </div>
+</div>
+
+<!-- EMAIL POPUP -->
+<div class="email-popup" id="emailPopup">
+  <button class="email-popup-close" id="emailPopupClose">×</button>
+  <h3>📧 Endereços de E-mail — Comunicações Comuns</h3>
+
+  <div class="email-section">
+    <div class="email-section-title">Corregedorias PC, PM e GCM — PC</div>
+    <div class="email-row"><span class="email-addr" onclick="window.location='mailto:dap.cgpc.hotel@policiacivil.sp.gov.br'">dap.cgpc.hotel@policiacivil.sp.gov.br</span></div>
+    <div class="email-row"><span class="email-addr" onclick="window.location='mailto:cartoriocentral.corregedoria@policiacivil.sp.gov.br'">cartoriocentral.corregedoria@policiacivil.sp.gov.br</span></div>
+  </div>
+
+  <div class="email-section">
+    <div class="email-section-title">Corregedorias PC, PM e GCM — PM</div>
+    <div class="email-row"><span class="email-addr" onclick="window.location='mailto:corregpmsjd@policiamilitar.sp.gov.br'">corregpmsjd@policiamilitar.sp.gov.br</span></div>
+    <div class="email-row"><span class="email-addr" onclick="window.location='mailto:corregsecop@policiamilitar.sp.gov.br'">corregsecop@policiamilitar.sp.gov.br</span></div>
+  </div>
+
+  <div class="email-section">
+    <div class="email-section-title">Corregedorias PC, PM e GCM — GCM</div>
+    <div class="email-row"><span class="email-addr" onclick="window.location='mailto:wprattes@prefeitura.sp.gov.br'">wprattes@prefeitura.sp.gov.br</span></div>
+    <div class="email-row"><span class="email-addr" onclick="window.location='mailto:smsupermanencia@prefeitura.sp.gov.br'">smsupermanencia@prefeitura.sp.gov.br</span></div>
+    <div class="email-row"><span class="email-addr" onclick="window.location='mailto:CSUCORREGEXPEDGERAL@PREFEITURA.SP.GOV.BR'">CSUCORREGEXPEDGERAL@PREFEITURA.SP.GOV.BR</span></div>
+  </div>
+
+  <div class="email-section">
+    <div class="email-section-title">MPSP — GECEP</div>
+    <div class="email-row"><span class="email-addr" onclick="window.location='mailto:gecep@mpsp.mp.br'">gecep@mpsp.mp.br</span></div>
+  </div>
+
+  <div class="email-section">
+    <div class="email-section-title">Suspensão CNH</div>
+    <div class="email-row"><span class="email-addr" onclick="window.location='mailto:protocolo@detran.sp.gov.br'">protocolo@detran.sp.gov.br</span></div>
+  </div>
+
+  <div class="email-section">
+    <div class="email-section-title">SAP Medicamentos</div>
+    <div class="email-row"><span class="email-addr" onclick="window.location='mailto:coremetro@coremetro.sap.sp.gov.br'">coremetro@coremetro.sap.sp.gov.br</span></div>
+    <div class="email-row"><span class="email-addr" onclick="window.location='mailto:gpgaspp@sp.gov.br'">gpgaspp@sp.gov.br</span></div>
+    <div class="email-row"><span class="email-addr" onclick="window.location='mailto:coordenadoriadesaudesap@sp.gov.br'">coordenadoriadesaudesap@sp.gov.br</span></div>
+  </div>
+
+  <div class="email-section">
+    <div class="email-section-title">TJM-SP</div>
+    <div class="email-row"><span class="email-addr" onclick="window.location='mailto:distribuicao@tjmsp.jus.br'">distribuicao@tjmsp.jus.br</span></div>
+    <div class="email-row"><span class="email-addr" onclick="window.location='mailto:corregedoria.permanente@tjmsp.jus.br'">corregedoria.permanente@tjmsp.jus.br</span></div>
+  </div>
+
+  <div class="email-section">
+    <div class="email-section-title">CAPS — Consulta de e-mail por unidade</div>
+    <div class="email-row"><a href="https://capital.sp.gov.br/web/saude/w/saude_mental_ad/204204" target="_blank" style="color:#2563eb;font-size:11px;">capital.sp.gov.br — Saúde Mental AD</a></div>
+  </div>
+
+  <div class="email-section">
+    <div class="email-section-title">Conselho Tutelar — Consulta por unidade</div>
+    <div class="email-row"><a href="https://capital.sp.gov.br/web/criancas_e_adolescentes/w/conselhos_tutelares/167426" target="_blank" style="color:#2563eb;font-size:11px;">capital.sp.gov.br — Conselhos Tutelares</a></div>
+  </div>
+
+  <div class="email-section">
+    <div class="email-section-title">Polícia Federal — Suspensão de registro de armas</div>
+    <div class="email-row"><span class="email-addr" onclick="window.location='mailto:protocoloeletronico.sp@pf.gov.br'">protocoloeletronico.sp@pf.gov.br</span></div>
+  </div>
+
+  <div class="email-section">
+    <div class="email-section-title">Consulados — Consulta por país</div>
+    <div class="email-row"><a href="http://consulados.com.br/paises/" target="_blank" style="color:#2563eb;font-size:11px;">consulados.com.br/paises</a></div>
+  </div>
+
+  <div class="email-section">
+    <div class="email-section-title">Ministério da Justiça</div>
+    <div class="email-row"><span class="email-addr" onclick="window.location='mailto:expulsao@mj.gov.br'">expulsao@mj.gov.br</span></div>
+    <div class="email-row"><span class="email-addr" onclick="window.location='mailto:chefiadegabinete@mj.gov.br'">chefiadegabinete@mj.gov.br</span></div>
+  </div>
+</div>
+
+<!-- DDM POPUP -->
+<div class="email-popup" id="ddmPopup" style="right:140px;">
+  <button class="email-popup-close" id="ddmPopupClose">×</button>
+  <h3>📋 E-mails DDMs</h3>
+  <p style="background:#fef3c7;border:1px solid #fbbf24;border-radius:5px;padding:6px 8px;margin-bottom:10px;font-size:11px;color:#92400e;">⚠️ Estes e-mails podem estar desatualizados. Confirme sempre se há informações mais recentes.</p>
+  <div class="email-section">
+    <div class="email-row"><span class="email-label">1ª DDM</span><span class="email-addr" onclick="window.location='mailto:spaulo.ddm01@policiacivil.sp.gov.br'">spaulo.ddm01@policiacivil.sp.gov.br</span></div>
+    <div class="email-row"><span class="email-label">2ª DDM</span><span class="email-addr" onclick="window.location='mailto:spaulo.ddm02@policiacivil.sp.gov.br'">spaulo.ddm02@policiacivil.sp.gov.br</span></div>
+    <div class="email-row"><span class="email-label">3ª DDM</span><span class="email-addr" onclick="window.location='mailto:spaulo.ddm03@policiacivil.sp.gov.br'">spaulo.ddm03@policiacivil.sp.gov.br</span></div>
+    <div class="email-row"><span class="email-label">4ª DDM</span><span class="email-addr" onclick="window.location='mailto:ddm.sec04@policiacivil.sp.gov.br'">ddm.sec04@policiacivil.sp.gov.br</span></div>
+    <div class="email-row"><span class="email-label">5ª DDM</span><span class="email-addr" onclick="window.location='mailto:ddm.sec05@policiacivil.sp.gov.br'">ddm.sec05@policiacivil.sp.gov.br</span></div>
+    <div class="email-row"><span class="email-label">6ª DDM</span><span class="email-addr" onclick="window.location='mailto:spaulo.ddm06@policiacivil.sp.gov.br'">spaulo.ddm06@policiacivil.sp.gov.br</span></div>
+    <div class="email-row"><span class="email-label">8ª DDM</span><span class="email-addr" onclick="window.location='mailto:ddm.sec08@policiacivil.sp.gov.br'">ddm.sec08@policiacivil.sp.gov.br</span></div>
+    <div class="email-row"><span class="email-label">9ª DDM</span><span class="email-addr" onclick="window.location='mailto:spaulo.ddm09@policiacivil.sp.gov.br'">spaulo.ddm09@policiacivil.sp.gov.br</span></div>
+  </div>
+</div>
+
+<div class="tabs-wrap" id="tabsWrap"></div>
+<div class="content" id="content"></div>
+<div id="mpu-content" style="padding:12px 16px; display:none;"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   SHARED STATE
+═══════════════════════════════════════════════════════ */
+const KEY = 'plantao_tjsp_v1';
+let state = loadState();
+
+function loadState() {
+  try { const r = localStorage.getItem(KEY); if (r) return JSON.parse(r); } catch(e) {}
+  return { casos: [], activeId: 'MPU', mpu: { mpuCols: [emptyMpuCol(), emptyMpuCol(), emptyMpuCol()] } };
+}
+function saveState() { localStorage.setItem(KEY, JSON.stringify(state)); }
+if (!state.mpu) state.mpu = { mpuCols: [emptyMpuCol(), emptyMpuCol(), emptyMpuCol()] };
+
+function newCaso() {
+  return {
+    id: Date.now() + Math.random(),
+    tipo: 'aud',
+    nome: '', processo: '',
+    subtipo: null,
+    resultado: null,
+    regime: null,
+    checks: {},
+  };
+}
+
+function emptyMpuCol() {
+  return { processo: '', reu: '', precatoria: false, tudook: false, checks: {}, obs: '' };
+}
+
+/* ═══════════════════════════════════════════════════════
+   AUD STEPS
+═══════════════════════════════════════════════════════ */
+function audCommonSteps() { return [
+  { id:'c1', text:'Copiar dados do averiguado da planilha de distribuição para a da sua sala' },
+  { id:'c2', text:'Abrir o processo — verificar o assunto' },
+  { id:'c3', text:'Colocar tipo de ação na planilha GPS' },
+  { id:'c4', text:'Abrir Histórico de Partes para buscar CPF do averiguado; se não há: busque através do RG na FA → senão, pelo nome no BNMP → senão, Infoseg' },
+  { id:'c5', text:'Verificar cadastro no BNMP — se não há, cadastre o averiguado' },
+];}
+function audApfBeforeSteps() { return [
+  { id:'a1', text:'Cadastrar defensoria (99999D/SP) ou, se houver, o <strong>advogado constituído</strong> no Histórico de Partes', isHtml:true },
+  { id:'a2', text:'Cadastrar no Histórico de Partes: prisão em flagrante (código 255) + delegacia responsável' },
+  { id:'a3', text:'BNMP: cadastrar evento "Auto de Prisão em Flagrante" com dados do BO (origem, data, hora, fiança)' },
+];}
+function audCapBeforeSteps() { return [
+  { id:'k1', text:'Ver regime prisional no mandado de prisão' },
+  { id:'k2', text:'Verificar se o mandado de prisão consta no BNMP' },
+  { id:'k3', text:'BNMP: cadastrar certidão de cumprimento do mandado de prisão — subir no processo (PEÇA)' },
+  { id:'k4', text:'Cadastrar defensoria (99999D/SP) ou, se houver, o <strong>advogado constituído</strong> no Histórico de Partes', isHtml:true },
+];}
+const ART109_NOTE = { id:'d5n', isNote:true, isLegal:true, text:`Art. 109. A prescrição, antes de transitar em julgado a sentença final, salvo o disposto no § 1o do art. 110 deste Código, regula-se pelo máximo da pena privativa de liberdade cominada ao crime, verificando-se: (Redação dada pela Lei nº 12.234, de 2010).
+I - em vinte anos, se o máximo da pena é superior a doze;
+II - em dezesseis anos, se o máximo da pena é superior a oito anos e não excede a doze;
+III - em doze anos, se o máximo da pena é superior a quatro anos e não excede a oito;
+IV - em oito anos, se o máximo da pena é superior a dois anos e não excede a quatro;
+V - em quatro anos, se o máximo da pena é igual a um ano ou, sendo superior, não excede a dois;
+VI - em 3 (três) anos, se o máximo da pena é inferior a 1 (um) ano. (Redação dada pela Lei nº 12.234, de 2010).
+Prescrição das penas restritivas de direito
+Parágrafo único - Aplicam-se às penas restritivas de direito os mesmos prazos previstos para as privativas de liberdade. (Redação dada pela Lei nº 7.209, de 11.7.1984)` };
+
+function impedimentoSteps(prefix) { return [
+  { id:prefix+'i0', isNote:true, text:'⚠️ CERTIDÃO DE IMPEDIMENTO — fazer imediatamente após expedir o alvará/ofício, para o apoio poder levar à carceragem' },
+  { id:prefix+'i1', text:'Subir a FA do averiguado nos autos (FA DIPOL), se ainda não constar' },
+  { id:prefix+'i2', text:'Subir a pesquisa de peças do BNMP nos autos' },
+  { id:prefix+'i3', text:'Analisar peças e processos para verificar se o averiguado pode ser solto' },
+  { id:prefix+'i4', text:'Expedir certidão: Com impedimento (mod. 730799) ou Sem impedimento (mod. 730801)' },
+];}
+
+function audResultSteps(r) {
+  if (r === 'prev') return [
+    { id:'p1', text:'BNMP: incluir evento → "Audiência de Custódia e Análise de Prisão em Flagrante"' },
+    { id:'p2', text:'Sistema do BNMP gera mandado de prisão automaticamente — enviar o link do BNMP ao assistente para o magistrado assinar' },
+    { id:'p3', text:'Após assinatura: fazer certidão de cumprimento do mandado de prisão preventiva no BNMP' },
+    { id:'p4', text:'Subir mandado assinado e certidão de cumprimento nos autos' },
+    { id:'p5', text:'Verificar e-mails a enviar conforme a decisão (IIRGD, delegacia, vara de origem etc.)' },
+    { id:'p6', text:'Atualizar Histórico de Partes' },
+    { id:'p7', text:'Planilha GPS: atualizar dados' },
+  ];
+  if (r === 'dom') return [
+    { id:'d1', text:'BNMP: incluir evento → "Audiência de Custódia e Análise de Prisão em Flagrante"' },
+    { id:'d2', text:'Sistema gera mandado de prisão — avisar assistente para assinar' },
+    { id:'d3', text:'Após assinatura do mandado: incluir peça → Alvará de Soltura (classe 280 – APF) — selecionar mandado expedido' },
+    { id:'d4', text:'Selecionar motivo: "Prisão Domiciliar" — marcar checkboxes "Prisão Domiciliar" e "Outras Medidas Cautelares" (se houver)' },
+    { id:'d5', text:'Verificar data de validade (art. 109 CP — pena máx. em abstrato)' },
+    ART109_NOTE,
+    { id:'d6a', text:'Avisar assistente para o magistrado assinar o mandado no BNMP' },
+    { id:'d6b', text:'Após assinatura do mandado, gerar certidão de cumprimento no BNMP' },
+    { id:'d6c', text:'Subir aos autos mandado assinado e certidão de cumprimento' },
+    ...impedimentoSteps('dom'),
+    { id:'d7', text:'Verificar e-mails a enviar conforme a decisão' },
+    { id:'d8', text:'Atualizar Histórico de Partes' },
+    { id:'d9', text:'Planilha GPS: atualizar' },
+  ];
+  if (r === 'prov') return [
+    { id:'v1', text:'BNMP: incluir evento → "Audiência de Custódia e Análise de Prisão em Flagrante"' },
+    { id:'v2', text:'Sairá o alvará — enviar link ao assistente para assinatura do magistrado' },
+    ...impedimentoSteps('prov'),
+    { id:'v3', text:'Após assinatura: incluir peça "Mandado de Medidas Cautelares Diversas" com as cautelares da decisão (se houver)' },
+    { id:'v4', text:'Avisar assistente para assinar o mandado de cautelares' },
+    { id:'v5', text:'No BNMP fazer certidão de cumprimento do alvará (nova peça → certidões)' },
+    { id:'v6', text:'Verificar e-mails a enviar conforme a decisão' },
+    { id:'v8', text:'Atualizar Histórico de Partes' },
+    { id:'v7', text:'Planilha GPS: atualizar' },
+  ];
+  if (r === 'relax') return [
+    { id:'r1', text:'BNMP: incluir evento → "Audiência de Custódia e Análise de Prisão em Flagrante" → alvará de soltura será criado através do Evento de audiência de custódia' },
+    { id:'r2', text:'Avisar assistente para assinatura do alvará' },
+    ...impedimentoSteps('relax'),
+    { id:'r3', text:'Mandado e alvará de APF: NÃO enviar e-mail (salvo se a decisão determinar)' },
+    { id:'r4', text:'Planilha GPS: atualizar' },
+  ];
+  return [];
+}
+function audCapRegimeSteps(regime) {
+  if (regime === 'fechado') return [
+    { id:'f1', text:'Após audiência de custódia: criar evento "Audiência de Custódia e Análise de Prisão" no BNMP' },
+    { id:'f2', text:'Enviar e-mail com todo o expediente para vara de origem do mandado + mandados.iirgd@sp.gov.br' },
+    { id:'f3', text:'Juntar cópia do e-mail no processo' },
+    { id:'f4', text:'Limpar pendências da fila' },
+  ];
+  if (regime === 'aberto') return [
+    { id:'o1', text:'Após audiência de custódia: criar evento "Audiência de Custódia e Análise de Prisão" no BNMP' },
+    { id:'o2', text:'Se mandado consta no BNMP: expedir alvará de soltura (pelo evento de audiência de custódia)' },
+    { id:'o3', text:'Se mandado NÃO consta no BNMP: expedir ofício liberatório no SAJ (Modelo: 505888) e certificar nos autos' },
+    ...impedimentoSteps('cap'),
+    { id:'o4', text:'Enviar e-mail com todo o expediente para vara de origem + mandados.iirgd@sp.gov.br' },
+    { id:'o5', text:'Juntar cópia do e-mail no processo' },
+    { id:'o6', text:'Limpar pendências da fila' },
+  ];
+  return [];
+}
+function audFinalSteps() { return [
+  { id:'z1', text:'Remover ato da decisão' },
+  { id:'z2', text:'Copiar para fila "Ag. Análise de Cartório"' },
+];}
+function audPetSteps() { return [
+  { id:'pet1', text:'Aguardar decisão do magistrado' },
+  { id:'pet2', text:'Se DEFERIDA: encaminhar decisão por e-mail para o crematório e/ou advogado (se constituído) ou dar ciência à Defensoria' },
+  { id:'pet3', text:'Se INDEFERIDA: dar ciência às partes' },
+  { id:'pet4', text:'Remover ato da decisão' },
+  { id:'pet5', text:'Copiar para fila "Ag. Análise de Cartório"' },
+];}
+
+function audAllSteps(caso) {
+  let s = caso.subtipo === 'pet' ? [] : [...audCommonSteps()];
+  if (caso.subtipo === 'apf') {
+    s = [...s, ...audApfBeforeSteps()];
+    if (caso.resultado) s = [...s, ...audResultSteps(caso.resultado)];
+  } else if (caso.subtipo === 'cap') {
+    s = [...s, ...audCapBeforeSteps()];
+    if (caso.regime) s = [...s, ...audCapRegimeSteps(caso.regime)];
+  } else if (caso.subtipo === 'pet') {
+    s = [...s, ...audPetSteps()];
+  }
+  if ((caso.subtipo === 'apf' && caso.resultado) || (caso.subtipo === 'cap' && caso.regime)) {
+    s = [...s, ...audFinalSteps()];
+  }
+  return s;
+}
+
+/* ═══════════════════════════════════════════════════════
+   MPU DATA
+═══════════════════════════════════════════════════════ */
+const MPU_SECTIONS = [
+  { type:'section', label:'I. ANTES DA DECISÃO' },
+  { type:'item', label:'Verificar se já há cadastro do averiguado no BNMP' },
+  { type:'item', label:'Verificar cadastro do averiguado no Partes e Representantes' },
+  { type:'item', label:'Incluir o CPF do averiguado na planilha GPS' },
+  { type:'item', label:'Identificar o Distrito Policial ou Delegacia da Mulher responsável', hasText:true },
+  { type:'select', label:'Verificar se a vítima aceitou ou não a comunicação via Whatsapp' },
+  { type:'item', label:'Salvar BO e Extrato de Qualificação das Partes constantes nos autos (para enviar à DP posteriormente)' },
+  { type:'section', label:'II. APÓS A DECISÃO' },
+  { type:'select', label:'MPU deferida?' },
+  { type:'item', label:'Em caso de MPU <strong>INDEFERIDA</strong>: Encaminhar e-mail à delegacia de origem e informar a vítima', isHtml:true, isIndeferida:true },
+  { type:'item', label:'Expedir peça no BNMP (Assunto: 1268) — PRIORIDADE' },
+  { type:'item', label:'Encaminhar para o Assistente para o magistrado assinar a peça' },
+  { type:'item', label:'Enviar a peça do BNMP por e-mail para iirgd.dipol@policiacivil.sp.gov.br e para a delegacia responsável (junto com o BO e Extrato de Qualificação)' },
+  { type:'item', label:'Subir a peça e os comprovantes de e-mail nos autos' },
+  { type:'item', label:'Intimar a vítima via <a href="https://zap.tjsp.jus.br/" target="_blank" style="color:#2563eb;text-decoration:underline;">Whatsapp</a>, caso autorizado', isHtml:true },
+  { type:'item', label:'Intimar a vítima com a folha de rosto (modelo 506139 — o escrevente que assina esse documento) ou Carta Precatória (modelo 502813)' },
+  { type:'item', label:'Intimar agressor com a folha de rosto (modelo 506139 — o escrevente que assina esse documento) ou Carta Precatória (modelo 502813)' },
+  { type:'item', label:'Precatória', isPrecat:true },
+  { type:'item', label:'Preencher histórico de partes' },
+  { type:'note', label:'Modelos: 653 (outras protetivas) · 690 (100m) · 691 (200m) · 692 (500m) · 689 (proibição de contato) · 819 (300m) · 688 (afastamento do lar)' },
+  { type:'item', label:'Se foi expedido mandado, marcar "Com Pendência" na planilha GPS' },
+  { type:'item', label:'Preencher todos os dados da planilha GPS' },
+  { type:'item', label:'Preencher planilha dos Mandados com os dados dos intimados' },
+  { type:'item', label:'Remover ato da decisão' },
+  { type:'item', label:'Copiar para fila "Ag. Análise de Cartório"' },
+];
+const WA_SEL  = MPU_SECTIONS.findIndex(s => s.label === 'Verificar se a vítima aceitou ou não a comunicação via Whatsapp');
+const WA_ITEM = MPU_SECTIONS.findIndex(s => s.isHtml && s.label.includes('Whatsapp'));
+const MND_ITEM= MPU_SECTIONS.findIndex(s => s.label === 'Intimar a vítima com a folha de rosto (modelo 506139 — o escrevente que assina esse documento) ou Carta Precatória (modelo 502813)');
+const AGR_ITEM= MPU_SECTIONS.findIndex(s => s.label === 'Intimar agressor com a folha de rosto (modelo 506139 — o escrevente que assina esse documento) ou Carta Precatória (modelo 502813)');
+const DEV_ITEM= MPU_SECTIONS.findIndex(s => s.isPrecat === true);
+const PRECAT_HI = [MND_ITEM, AGR_ITEM, DEV_ITEM];
+const MPU_DEF_SEL   = MPU_SECTIONS.findIndex(s => s.label === 'MPU deferida?');
+const MPU_INDF_ITEM = MPU_SECTIONS.findIndex(s => s.isIndeferida === true);
+const MPU_EXEMPT  = [WA_ITEM, MND_ITEM, MPU_INDF_ITEM];
+
+/* ═══════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════ */
+function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function formatProcesso(v) {
+  // Remove tudo que não for dígito
+  const d = v.replace(/\D/g, '');
+  if (!d) return '';
+  // Padrão: 7-2.4.1.8  => NNNNNNN-DD.AAAA.J.TT.OOOO
+  const p1 = d.slice(0,7);
+  const p2 = d.slice(7,9);
+  const p3 = d.slice(9,13);
+  const p4 = d.slice(13,14);
+  const p5 = d.slice(14,16);
+  const p6 = d.slice(16,20);
+  let r = p1;
+  if (p2) r += '-' + p2;
+  if (p3) r += '.' + p3;
+  if (p4) r += '.' + p4;
+  if (p5) r += '.' + p5;
+  if (p6) r += '.' + p6;
+  return r;
+}
+
+function tabLabel(caso) {
+  const numM = (caso.processo||'').match(/-(\d+)\.\d{4}/);
+  const num = numM ? numM[1] : '';
+  const first = (caso.nome||'').trim().split(/\s+/)[0] || '';
+  if (num && first) return num + ' ' + first;
+  return first || num || 'Novo caso';
+}
+
+function audProgress(caso) {
+  const steps = audAllSteps(caso).filter(s => !s.isNote);
+  if (!steps.length) return 0;
+  const done = steps.filter(s => caso.checks[s.id]).length;
+  return Math.round((done / steps.length) * 100);
+}
+
+function tabDotClass(caso) {
+  const pct = audProgress(caso);
+  if (pct === 100) return 'dot-done';
+  if (pct > 0)    return 'dot-progress';
+  return 'dot-new';
+}
+
+function mpuProgress(caso) {
+  // average across cols that have any data
+  const activeCols = caso.mpuCols.filter(c => c.processo || c.reu);
+  if (!activeCols.length) return 0;
+  const items = MPU_SECTIONS.filter(s => s.type === 'item');
+  const totals = activeCols.map(col => {
+    const done = items.filter((s, i) => col.checks[MPU_SECTIONS.indexOf(s)]).length;
+    return done / items.length;
+  });
+  return Math.round(totals.reduce((a,b)=>a+b,0) / totals.length * 100);
+}
+
+/* ═══════════════════════════════════════════════════════
+   RENDER TABS
+═══════════════════════════════════════════════════════ */
+function renderTabs() {
+  const wrap = document.getElementById('tabsWrap');
+  wrap.innerHTML = '';
+
+  // Fixed MPU tab
+  const mpuTab = document.createElement('div');
+  mpuTab.className = 'tab' + (state.activeId === 'MPU' ? ' active' : '');
+  const mpuDot = document.createElement('span');
+  mpuDot.className = 'tab-dot dot-new';
+  const mpuLbl = document.createElement('span');
+  mpuLbl.textContent = 'MPU';
+  const mpuBadge = document.createElement('span');
+  mpuBadge.className = 'tab-badge badge-mpu';
+  mpuBadge.textContent = 'MPU';
+  mpuTab.append(mpuDot, mpuLbl, mpuBadge);
+  mpuTab.addEventListener('click', () => { state.activeId = 'MPU'; saveState(); render(); });
+  wrap.appendChild(mpuTab);
+
+  // Caso tabs
+  state.casos.forEach(caso => {
+    const tab = document.createElement('div');
+    tab.className = 'tab' + (caso.id === state.activeId ? ' active' : '');
+    tab.dataset.id = caso.id;
+    const dot = document.createElement('span');
+    dot.className = 'tab-dot ' + tabDotClass(caso);
+    const lbl = document.createElement('span');
+    lbl.textContent = tabLabel(caso);
+    const badge = document.createElement('span');
+    badge.className = 'tab-badge ' + (caso.subtipo === 'apf' ? 'badge-apf' : caso.subtipo === 'cap' ? 'badge-cap' : caso.subtipo === 'pet' ? 'badge-pet' : 'badge-new');
+    badge.textContent = caso.subtipo === 'apf' ? 'APF' : caso.subtipo === 'cap' ? 'CAP' : caso.subtipo === 'pet' ? 'PET' : '—';
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'tab-close';
+    closeBtn.textContent = '×';
+    closeBtn.title = 'Fechar aba';
+    closeBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      const nome = caso.nome ? `"${caso.nome}"` : 'este auto';
+      if (confirm(`Fechar ${nome}? Todos os dados serão apagados.`)) {
+        state.casos = state.casos.filter(c => c.id !== caso.id);
+        if (state.activeId === caso.id) state.activeId = 'MPU';
+        saveState(); render();
+      }
+    });
+    tab.append(dot, lbl, badge, closeBtn);
+    tab.addEventListener('click', () => { state.activeId = caso.id; saveState(); render(); });
+    wrap.appendChild(tab);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   RENDER CONTENT
+═══════════════════════════════════════════════════════ */
+function renderContent() {
+  const contentEl = document.getElementById('content');
+  const mpuEl = document.getElementById('mpu-content');
+  contentEl.innerHTML = '';
+  mpuEl.innerHTML = '';
+
+  // MPU fixed tab — renders full-width outside the max-width container
+  if (state.activeId === 'MPU') {
+    contentEl.style.display = 'none';
+    mpuEl.style.display = 'block';
+    renderMpu(mpuEl, state.mpu);
+    return;
+  }
+
+  contentEl.style.display = 'block';
+  mpuEl.style.display = 'none';
+  const content = contentEl;
+
+  const caso = state.casos.find(x => x.id === state.activeId);
+  if (!caso) {
+    contentEl.innerHTML = `<div class="empty-state">
+      <svg width="40" height="40" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>
+      <p>Clique em <strong>+ Novo caso</strong> para começar</p></div>`;
+    return;
+  }
+  renderAud(content, caso);
+}
+
+
+
+/* ─── AUD RENDER ─── */
+function renderAud(content, caso) {
+  const steps = audAllSteps(caso);
+  const checkable = steps.filter(s => !s.isNote);
+  const done = checkable.filter(s => caso.checks[s.id]).length;
+  const pct = checkable.length ? Math.round((done / checkable.length) * 100) : 0;
+
+  // progress
+  const pb = document.createElement('div');
+  pb.className = 'progress-bar-wrap';
+  pb.innerHTML = `<div class="progress-bar-label"><span>${done} / ${steps.length} itens</span><span>${pct}%</span></div>
+    <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${pct}%"></div></div>`;
+  content.appendChild(pb);
+
+  if (pct === 100) {
+    const fb = document.createElement('div');
+    fb.className = 'finish-badge';
+    fb.textContent = '✓ Processo concluído — pronto para análise de cartório';
+    content.appendChild(fb);
+  }
+
+  // proc info
+  const info = document.createElement('div');
+  info.className = 'proc-info';
+  info.innerHTML = `
+    <div class="info-field"><label>NOME DO AVERIGUADO</label><input type="text" placeholder="Nome completo" value="${esc(caso.nome)}" data-aud="nome"></div>
+    <div class="info-field"><label>Nº do processo</label><input type="text" placeholder="0000000-00.0000.0.00.0000" value="${esc(caso.processo)}" data-aud="processo"></div>
+    <div style="align-self:flex-end"><button class="btn btn-danger" data-action="remove-caso">Remover</button></div>`;
+  content.appendChild(info);
+
+  // subtipo picker
+  if (!caso.subtipo) {
+    const sp = document.createElement('div');
+    sp.className = 'sub-picker';
+    sp.innerHTML = `<h3>Tipo de audiência / petição</h3>
+      <div class="sub-options" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="sub-btn" data-subtipo="apf">🚔 APF / Flagrante<br><small style="font-weight:400;color:var(--muted)">Auto de Prisão em Flagrante</small></div>
+        <div class="sub-btn" data-subtipo="cap">🔍 Captura<br><small style="font-weight:400;color:var(--muted)">Captura de Procurado</small></div>
+        <div class="sub-btn" data-subtipo="pet">📄 Petição<br><small style="font-weight:400;color:var(--muted)">Cremação e outras</small></div>
+      </div>`;
+    content.appendChild(sp);
+  }
+
+  // common
+  if (caso.subtipo !== 'pet') mkSection(content, caso, 'Fase Comum — Antes de Tudo', audCommonSteps(), 'h-common');
+
+  if (caso.subtipo === 'apf') {
+    mkSection(content, caso, 'APF — Antes da Decisão na audiência', audApfBeforeSteps(), 'h-apf');
+    if (!caso.resultado) {
+      const rp = document.createElement('div');
+      rp.className = 'sub-picker';
+      rp.innerHTML = `<h3>Resultado da audiência</h3>
+        <div class="sub-options">
+          <div class="sub-btn" data-resultado="prev">🔴 Conversão em Preventiva</div>
+          <div class="sub-btn" data-resultado="dom">🟠 Prisão Domiciliar</div>
+          <div class="sub-btn" data-resultado="prov">🟢 Liberdade Provisória</div>
+          <div class="sub-btn" data-resultado="relax">🔵 Relaxamento</div>
+        </div>`;
+      content.appendChild(rp);
+    } else {
+      const lbl = {prev:'Conversão em Preventiva',dom:'Prisão Domiciliar',prov:'Liberdade Provisória',relax:'Relaxamento'};
+      mkSection(content, caso, 'Após Decisão — ' + lbl[caso.resultado], audResultSteps(caso.resultado), 'h-' + caso.resultado);
+      mkChangeBtn(content, 'change-resultado', '↩ Alterar resultado da audiência');
+    }
+  }
+
+  if (caso.subtipo === 'cap') {
+    mkSection(content, caso, 'Captura — Antes da Audiência', audCapBeforeSteps(), 'h-cap');
+    if (!caso.regime) {
+      const rp = document.createElement('div');
+      rp.className = 'sub-picker';
+      rp.innerHTML = `<h3>Regime prisional no mandado</h3>
+        <div class="sub-options cols-1">
+          <div class="sub-btn" data-regime="fechado">⛓ Fechado / Semiaberto / Prisão Civil</div>
+          <div class="sub-btn" data-regime="aberto">🟢 Aberto — Soltura</div>
+        </div>`;
+      content.appendChild(rp);
+    } else {
+      const lbl = {fechado:'Fechado / Semiaberto / Prisão Civil', aberto:'Regime Aberto — Soltura'};
+      mkSection(content, caso, 'Captura — ' + lbl[caso.regime], audCapRegimeSteps(caso.regime), 'h-cap');
+      mkChangeBtn(content, 'change-regime', '↩ Alterar regime');
+    }
+  }
+
+  if (caso.subtipo === 'pet') {
+    mkSection(content, caso, 'Petição — Cremação (Cautelar Inominada)', audPetSteps(), 'h-cap');
+  }
+
+  if ((caso.subtipo === 'apf' && caso.resultado) || (caso.subtipo === 'cap' && caso.regime)) {
+    mkSection(content, caso, 'Encerramento', audFinalSteps(), 'h-common');
+  }
+
+  attachAudHandlers(content, caso);
+}
+
+function mkSection(parent, caso, title, steps, hClass) {
+  if (!steps.length) return;
+  const sec = document.createElement('div');
+  sec.className = 'cl-section';
+  const hdr = document.createElement('div');
+  hdr.className = 'cl-section-header ' + hClass;
+  hdr.textContent = title;
+  sec.appendChild(hdr);
+  steps.forEach(step => {
+    if (step.isNote) {
+      const note = document.createElement('div');
+      note.className = 'cl-note-row' + (step.isLegal ? ' cl-note-legal' : '');
+      note.textContent = step.text;
+      sec.appendChild(note);
+      return;
+    }
+    const item = document.createElement('div');
+    item.className = 'cl-item' + (caso.checks[step.id] ? ' checked' : '');
+    item.dataset.stepId = step.id;
+    item.innerHTML = `<div class="cl-check"><svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="cl-label">${step.text}</span>`;
+    sec.appendChild(item);
+  });
+  parent.appendChild(sec);
+}
+
+function mkChangeBtn(parent, action, label) {
+  const d = document.createElement('div');
+  d.style.marginBottom = '12px';
+  d.innerHTML = `<button class="btn btn-muted" data-action="${action}">${label}</button>`;
+  parent.appendChild(d);
+}
+
+function attachAudHandlers(content, caso) {
+  content.querySelectorAll('input[data-aud]').forEach(el => {
+    el.addEventListener('input', e => { caso[e.target.dataset.aud] = e.target.value; saveState(); renderTabs(); });
+  });
+  content.querySelectorAll('[data-subtipo]').forEach(el => {
+    el.addEventListener('click', e => { caso.subtipo = e.currentTarget.dataset.subtipo; saveState(); render(); });
+  });
+  content.querySelectorAll('[data-resultado]').forEach(el => {
+    el.addEventListener('click', e => { caso.resultado = e.currentTarget.dataset.resultado; saveState(); render(); });
+  });
+  content.querySelectorAll('[data-regime]').forEach(el => {
+    el.addEventListener('click', e => { caso.regime = e.currentTarget.dataset.regime; saveState(); render(); });
+  });
+  content.querySelectorAll('[data-action="change-resultado"]').forEach(el => {
+    el.addEventListener('click', () => {
+      if (!confirm('Alterar resultado limpa os checks desta fase. Continuar?')) return;
+      ['p','d','v','r'].forEach(px => [1,2,3,4,5,6,7,8].forEach(n => delete caso.checks[px+n]));
+      ['z1','z2'].forEach(k => delete caso.checks[k]);
+      caso.resultado = null; saveState(); render();
+    });
+  });
+  content.querySelectorAll('[data-action="change-regime"]').forEach(el => {
+    el.addEventListener('click', () => {
+      if (!confirm('Alterar regime limpa os checks desta fase. Continuar?')) return;
+      ['f','o'].forEach(px => [1,2,3,4,5,6].forEach(n => delete caso.checks[px+n]));
+      ['z1','z2'].forEach(k => delete caso.checks[k]);
+      caso.regime = null; saveState(); render();
+    });
+  });
+  content.querySelectorAll('[data-action="remove-caso"]').forEach(el => {
+    el.addEventListener('click', () => {
+      if (!confirm('Remover este caso?')) return;
+      state.casos = state.casos.filter(x => x.id !== caso.id);
+      state.activeId = state.casos.length ? state.casos[state.casos.length-1].id : null;
+      saveState(); render();
+    });
+  });
+  content.querySelectorAll('.cl-item[data-step-id]').forEach(el => {
+    el.addEventListener('click', () => {
+      caso.checks[el.dataset.stepId] = !caso.checks[el.dataset.stepId];
+      saveState(); render();
+    });
+  });
+}
+
+/* ─── MPU RENDER ─── */
+function renderMpu(content, caso) {
+  // toolbar
+  const toolbar = document.createElement('div');
+  toolbar.className = 'mpu-toolbar';
+  toolbar.innerHTML = `<button class="btn btn-primary" id="mpuAddCol">+ Adicionar processo</button>
+    <button class="btn btn-muted" id="mpuResetBtn">Limpar tudo</button>
+    <button class="btn btn-muted" onclick="window.print()">🖨️ Imprimir</button>`;
+  content.appendChild(toolbar);
+
+  // table wrapper — full width, no box
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'overflow-x:auto;';
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const tbody = document.createElement('tbody');
+  table.append(thead, tbody);
+  wrap.appendChild(table);
+  content.appendChild(wrap);
+
+  // header row
+  const headerRow = document.createElement('tr');
+  const corner = document.createElement('th');
+  corner.className = 'lbl-col';
+  corner.textContent = 'Item';
+  headerRow.appendChild(corner);
+
+  caso.mpuCols.forEach((col, ci) => {
+    const hasData = col.processo || col.reu ||
+      Object.values(col.checks).some(v => v === true || (typeof v === 'string' && v !== ''));
+    const th = document.createElement('th');
+    th.className = 'proc-col-mpu proc-header-mpu' + (col.tudook ? ' mpu-allok-on' : '');
+    th.innerHTML = `
+      <button class="col-remove-mpu" data-mpu-remove="${ci}" title="Remover">✕</button>
+      <input type="text" placeholder="Nº do processo" data-mpu-field="processo" data-mpu-col="${ci}" value="${esc(col.processo)}">
+      <input type="text" placeholder="Averiguado" data-mpu-field="reu" data-mpu-col="${ci}" value="${esc(col.reu)}">
+      <label class="precat-lbl"><input type="checkbox" data-mpu-field="precatoria" data-mpu-col="${ci}" ${col.precatoria?'checked':''}> Precatória</label>`;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+
+  let currentPhase = 'before';
+  let itemCounter = 0;
+  MPU_SECTIONS.forEach((row, ri) => {
+    if (row.type === 'section') { currentPhase = row.label.startsWith('I.') ? 'before' : 'after'; itemCounter = 0; }
+
+    const tr = document.createElement('tr');
+    if (row.type === 'section') tr.className = 'mpu-section-row';
+    else if (row.type === 'note') tr.className = 'mpu-note-row';
+    else tr.className = currentPhase === 'before' ? 'phase-before' : 'phase-after';
+
+    const lbl = document.createElement('td');
+    lbl.className = 'lbl-col';
+    if (row.type === 'item' || row.type === 'select') {
+      itemCounter++;
+      if (row.isPrecat) {
+        lbl.innerHTML = `${itemCounter}. Se precatória → enviar para o magistrado e o chefe do plantão assinarem; quando assinado, enviar ao e-mail do Coordenador da Comarca respectiva até 13h00 (<a href="https://www.tjsp.jus.br/CanaisComunicacao/PlantaoJudiciario/PrimeiraInstancia" target="_blank" style="color:#1d4ed8;">clique aqui para consultar e-mails</a>)`;
+      } else if (row.isHtml) {
+        lbl.innerHTML = `${itemCounter}. ${row.label}`;
+      } else {
+        lbl.textContent = `${itemCounter}. ${row.label}`;
+      }
+    } else {
+      lbl.textContent = row.label;
+    }
+    tr.appendChild(lbl);
+
+    caso.mpuCols.forEach((col, ci) => {
+      const td = document.createElement('td');
+      const isPrecatHi = row.type === 'item' && col.precatoria && PRECAT_HI.includes(ri);
+      td.className = 'proc-col-mpu' + (col.tudook ? ' mpu-allok-on' : '') + (isPrecatHi ? ' mpu-precat-on' : '');
+
+      if (row.type === 'item') {
+        td.classList.add('mpu-item-cell');
+        const checked = !!col.checks[ri];
+        const waAns  = col.checks[WA_SEL] || '';
+        const mpuAns = col.checks[MPU_DEF_SEL] || '';
+        let disabled = false;
+        if (ri === WA_ITEM  && waAns === 'Não') disabled = true;
+        if (ri === MND_ITEM && waAns === 'Sim') disabled = true;
+        if (ri === MPU_INDF_ITEM && mpuAns === 'Sim') disabled = true;
+        if (mpuAns === 'Não' && currentPhase === 'after' && !MPU_EXEMPT.includes(ri)) disabled = true;
+        if (disabled) td.classList.add('mpu-item-disabled');
+        let inner = `<input type="checkbox" data-mpu-item="${ri}" data-mpu-col="${ci}" ${checked?'checked':''} ${disabled?'disabled':''}>`;
+        if (row.hasText) {
+          const tv = col.checks[ri+'_txt'] || '';
+          inner = `<span class="item-with-text">${inner}<input type="text" class="mini-txt-mpu" maxlength="6" placeholder="xxDDM" data-mpu-text="${ri}" data-mpu-col="${ci}" value="${esc(tv)}"></span>`;
+        }
+        td.innerHTML = inner;
+      } else if (row.type === 'select') {
+        td.classList.add('mpu-select-cell');
+        const val = col.checks[ri] || '';
+        const opt = v => `<option value="${v}" ${val===v?'selected':''}>${v===''?'—':v}</option>`;
+        td.innerHTML = `<select data-mpu-item="${ri}" data-mpu-col="${ci}">${opt('')}${opt('Sim')}${opt('Não')}</select>`;
+      }
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  // tudo ok row
+  const tokRow = document.createElement('tr');
+  tokRow.className = 'mpu-tudook-row';
+  const tokLbl = document.createElement('td');
+  tokLbl.className = 'lbl-col';
+  tokLbl.textContent = 'Tudo OK';
+  tokRow.appendChild(tokLbl);
+  caso.mpuCols.forEach((col, ci) => {
+    const td = document.createElement('td');
+    td.className = 'proc-col-mpu mpu-item-cell' + (col.tudook ? ' mpu-allok-on' : '');
+    td.innerHTML = `<input type="checkbox" data-mpu-field="tudook" data-mpu-col="${ci}" ${col.tudook?'checked':''}>`;
+    tokRow.appendChild(td);
+  });
+  tbody.appendChild(tokRow);
+
+  // obs row
+  const obsRow = document.createElement('tr');
+  obsRow.className = 'mpu-obs-row';
+  const obsLbl = document.createElement('td');
+  obsLbl.className = 'lbl-col';
+  obsLbl.textContent = 'Observações';
+  obsRow.appendChild(obsLbl);
+  caso.mpuCols.forEach((col, ci) => {
+    const td = document.createElement('td');
+    td.className = 'proc-col-mpu' + (col.tudook ? ' mpu-allok-on' : '');
+    td.innerHTML = `<textarea data-mpu-field="obs" data-mpu-col="${ci}">${esc(col.obs)}</textarea>`;
+    obsRow.appendChild(td);
+  });
+  tbody.appendChild(obsRow);
+
+  attachMpuHandlers(content, caso);
+}
+
+function attachMpuHandlers(content, caso) {
+  const addColBtn = content.querySelector('#mpuAddCol');
+  if (addColBtn) addColBtn.addEventListener('click', () => { caso.mpuCols.push(emptyMpuCol()); saveState(); render(); });
+
+  const resetBtn = content.querySelector('#mpuResetBtn');
+  if (resetBtn) resetBtn.addEventListener('click', () => {
+    if (!confirm('Limpar todos os dados da MPU?')) return;
+    state.mpu.mpuCols = [emptyMpuCol(), emptyMpuCol(), emptyMpuCol()];
+    saveState(); render();
+  });
+
+  // field inputs (processo, reu, obs)
+  content.querySelectorAll('input[data-mpu-field], textarea[data-mpu-field]').forEach(el => {
+    el.addEventListener('input', e => {
+      const ci = +e.target.dataset.mpuCol;
+      const field = e.target.dataset.mpuField;
+      if (field === 'precatoria' || field === 'tudook') {
+        caso.mpuCols[ci][field] = e.target.checked;
+        saveState(); render(); return;
+      }
+      if (field === 'processo') {
+        const formatted = formatProcesso(e.target.value);
+        caso.mpuCols[ci][field] = formatted;
+        const sel = e.target.selectionStart;
+        e.target.value = formatted;
+        // reposition cursor intelligently
+        try { e.target.setSelectionRange(sel, sel); } catch(_) {}
+        saveState(); renderTabs();
+        return;
+      }
+      caso.mpuCols[ci][field] = e.target.value;
+      saveState(); renderTabs();
+    });
+  });
+
+  // checkbox items
+  content.querySelectorAll('input[type=checkbox][data-mpu-item]').forEach(el => {
+    el.addEventListener('change', e => {
+      const ci = +e.target.dataset.mpuCol;
+      const ri = e.target.dataset.mpuItem;
+      caso.mpuCols[ci].checks[ri] = e.target.checked;
+      saveState();
+    });
+  });
+
+  // text mini field
+  content.querySelectorAll('input[data-mpu-text]').forEach(el => {
+    el.addEventListener('input', e => {
+      const ci = +e.target.dataset.mpuCol;
+      const ri = e.target.dataset.mpuText;
+      caso.mpuCols[ci].checks[ri+'_txt'] = e.target.value;
+      saveState();
+    });
+  });
+
+  // selects
+  content.querySelectorAll('select[data-mpu-item]').forEach(el => {
+    el.addEventListener('change', e => {
+      const ci = +e.target.dataset.mpuCol;
+      const ri = +e.target.dataset.mpuItem;
+      caso.mpuCols[ci].checks[ri] = e.target.value;
+      if (ri === WA_SEL) {
+        const dis = e.target.value === 'Não' ? WA_ITEM : e.target.value === 'Sim' ? MND_ITEM : null;
+        if (dis !== null) caso.mpuCols[ci].checks[dis] = false;
+        saveState(); render(); return;
+      }
+      if (ri === MPU_DEF_SEL) {
+        if (e.target.value === 'Não') {
+          MPU_SECTIONS.forEach((s, idx) => {
+            if (s.type === 'item' && idx > MPU_DEF_SEL && !MPU_EXEMPT.includes(idx))
+              caso.mpuCols[ci].checks[idx] = false;
+          });
+        }
+        if (e.target.value === 'Sim' || e.target.value === '') {
+          caso.mpuCols[ci].checks[MPU_INDF_ITEM] = false;
+        }
+        saveState(); render(); return;
+      }
+      saveState();
+    });
+  });
+
+  // remove col
+  content.querySelectorAll('[data-mpu-remove]').forEach(el => {
+    el.addEventListener('click', e => {
+      const idx = +e.currentTarget.dataset.mpuRemove;
+      if (caso.mpuCols.length <= 1) return;
+      const col = caso.mpuCols[idx];
+      const hasData = col.processo || col.reu ||
+        Object.values(col.checks).some(v => v === true || (typeof v === 'string' && v !== ''));
+      if (hasData && !confirm('Esta coluna tem dados preenchidos. Deseja apagar tudo e remover?')) return;
+      caso.mpuCols.splice(idx, 1);
+      saveState(); render();
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   MAIN
+═══════════════════════════════════════════════════════ */
+function render() { renderTabs(); renderContent(); }
+
+document.getElementById('addCasoBtn').addEventListener('click', () => {
+  const c = newCaso();
+  state.casos.push(c);
+  state.activeId = c.id;
+  saveState(); render();
+});
+
+render();
+
+// EMAIL POPUP
+document.getElementById('emailsBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  document.getElementById('ddmPopup').classList.remove('open');
+  document.getElementById('emailPopup').classList.toggle('open');
+});
+document.getElementById('emailPopupClose').addEventListener('click', e => {
+  e.stopPropagation();
+  document.getElementById('emailPopup').classList.remove('open');
+});
+document.getElementById('emailPopup').addEventListener('click', e => e.stopPropagation());
+
+// DDM POPUP
+document.getElementById('ddmsBtn').addEventListener('click', e => {
+  e.stopPropagation();
+  document.getElementById('emailPopup').classList.remove('open');
+  document.getElementById('ddmPopup').classList.toggle('open');
+});
+document.getElementById('ddmPopupClose').addEventListener('click', e => {
+  e.stopPropagation();
+  document.getElementById('ddmPopup').classList.remove('open');
+});
+document.getElementById('ddmPopup').addEventListener('click', e => e.stopPropagation());
+
+document.addEventListener('click', () => {
+  document.getElementById('emailPopup').classList.remove('open');
+  document.getElementById('ddmPopup').classList.remove('open');
+});
+</script>
+</body>
+</html>
