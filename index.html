@@ -341,6 +341,12 @@ function loadState() {
 }
 function saveState() { localStorage.setItem(KEY, JSON.stringify(state)); }
 if (!state.mpu) state.mpu = { mpuCols: [emptyMpuCol(), emptyMpuCol(), emptyMpuCol()] };
+// Auto-create first caso on fresh load so the page opens on a novo auto tab
+if (!state.casos || state.casos.length === 0) {
+  const _c = newCaso();
+  state.casos = [_c];
+  state.activeId = _c.id;
+}
 
 function newCaso() {
   return {
@@ -683,7 +689,7 @@ function renderAud(content, caso) {
   // progress
   const pb = document.createElement('div');
   pb.className = 'progress-bar-wrap';
-  pb.innerHTML = `<div class="progress-bar-label"><span>${done} / ${steps.length} itens</span><span>${pct}%</span></div>
+  pb.innerHTML = `<div class="progress-bar-label"><span>${done} / ${checkable.length} itens</span><span>${pct}%</span></div>
     <div class="progress-bar-track"><div class="progress-bar-fill" style="width:${pct}%"></div></div>`;
   content.appendChild(pb);
 
@@ -708,10 +714,11 @@ function renderAud(content, caso) {
     const sp = document.createElement('div');
     sp.className = 'sub-picker';
     sp.innerHTML = `<h3>Tipo de audiência / petição</h3>
-      <div class="sub-options" style="grid-template-columns:1fr 1fr 1fr;">
-        <div class="sub-btn" data-subtipo="apf">🚔 APF / Flagrante<br><small style="font-weight:400;color:var(--muted)">Auto de Prisão em Flagrante</small></div>
+      <div class="sub-options" style="grid-template-columns:1fr 1fr;">
+        <div class="sub-btn" data-subtipo="apf">🚔 Auto de Prisão em Flagrante<br><small style="font-weight:400;color:var(--muted)">APF</small></div>
         <div class="sub-btn" data-subtipo="cap">🔍 Captura<br><small style="font-weight:400;color:var(--muted)">Captura de Procurado</small></div>
         <div class="sub-btn" data-subtipo="pet">📄 Petição<br><small style="font-weight:400;color:var(--muted)">Cremação e outras</small></div>
+        <div class="sub-btn" data-subtipo="mpu">🛡️ Medida Protetiva de Urgência<br><small style="font-weight:400;color:var(--muted)">MPU</small></div>
       </div>`;
     content.appendChild(sp);
   }
@@ -805,7 +812,11 @@ function attachAudHandlers(content, caso) {
     el.addEventListener('input', e => { caso[e.target.dataset.aud] = e.target.value; saveState(); renderTabs(); });
   });
   content.querySelectorAll('[data-subtipo]').forEach(el => {
-    el.addEventListener('click', e => { caso.subtipo = e.currentTarget.dataset.subtipo; saveState(); render(); });
+    el.addEventListener('click', e => {
+      const sub = e.currentTarget.dataset.subtipo;
+      if (sub === 'mpu') { state.activeId = 'MPU'; saveState(); render(); return; }
+      caso.subtipo = sub; saveState(); render();
+    });
   });
   content.querySelectorAll('[data-resultado]').forEach(el => {
     el.addEventListener('click', e => { caso.resultado = e.currentTarget.dataset.resultado; saveState(); render(); });
